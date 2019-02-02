@@ -12,7 +12,7 @@
 
   <style>
     h1 { font-size: 14px; }
-    #url { width: 100%; }
+    #url { width: 100%; line-height: 20px; background: #f1f4f5; }
     #result { width: 700px; }
   </style>
 
@@ -21,24 +21,55 @@
 
     $(function() {
       resultApp = new expGuiCourse(document.getElementById('result'));
+  
+      enableAutoHeight();
     });
+
+    function enableAutoHeight() {
+      var $url = $('#url');
+      $url.on('input', function(e) {
+        adjustHeight($url);
+      });
+    }
+
+    function adjustHeight($textarea) {
+      var lineHeight = parseInt($textarea.css('lineHeight'));
+      var lineCount = ($textarea.val() + '\n').match(/\n/g).length;
+      $textarea.height(lineHeight * lineCount);
+    }
 
     function search_onclick() {
       var url = $('#url').val();
+      url = url.replace(/\s+/, '');
+      url = url.replace(/http:/, 'https:/');
       url = url.replace(/\/xml\//, '/json/');
 
       $.getJSON(url)
-      .catch(function(err) {
-        console.error(err);
-        alert('getJSONエラー。');
-      })
       .then(function(res) {
-        resultApp.setResult(JSON.stringify(res));
+        try {
+          $('#message').text('');
+          resultApp.setResult(JSON.stringify(res));
+        } catch (ex) {
+          console.error(ex);
+          alert('予期しないエラー');
+        }
       })
       .catch(function(err) {
         console.error(err);
-        alert('その他のエラー');
+        if (err.responseText) {
+          $('#message').text(err.responseText);
+        } else {
+          alert('getJSONエラー');
+        }
       });
+    }
+
+    function format_onclick() {
+      var $url = $('#url');
+      var url = $url.val();
+      url = url.replace(/([?&])/g, '\n$1');
+      $url.val(url);
+      adjustHeight($url);
     }
   </script>
 </head>
@@ -47,15 +78,19 @@
 
   /search/course/extremeのフルURLを入れてください:<br>
 
-  <input type="text" id="url" placeholder="URL">
+  <textarea id="url" rows="1"></textarea>
   <button onclick="search_onclick()">検索</button>
+  <button onclick="format_onclick()">整形</button>
+
+  <div id="message"></div>
+  <div id="result"></div>
 
   <ul>
     <li>例: <code>https://api.ekispert.jp/v1/json/search/course/extreme?key=****************&viaList=22671:22828</code></li>
     <li>xml版のURLでも可</li>
+    <li>URLの途中に改行やスペースを含んでいても可（削除されます）</li>
     <li><a href="http://docs.ekispert.com/v1/api/search/course/extreme.html" target="_blank">駅すぱあとWebサービスのドキュメント</a></li>
   </ul>
 
-  <div id="result"></div>
 </body>
 </html>
