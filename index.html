@@ -18,15 +18,16 @@
 
   <script>
     var resultApp;
+    var $url;
 
     $(function() {
+      $url = $('#url');
       resultApp = new expGuiCourse(document.getElementById('result'));
   
       enableAutoHeight();
     });
 
     function enableAutoHeight() {
-      var $url = $('#url');
       $url.on('input', function(e) {
         adjustHeight($url);
       });
@@ -39,9 +40,9 @@
     }
 
     function search_onclick() {
-      var url = $('#url').val();
-      url = url.replace(/\s+/, '');
-      url = url.replace(/http:/, 'https:/');
+      var url = $url.val();
+      url = url.replace(/\s+/g, '');
+      url = url.replace(/http:/, 'https:');
       url = url.replace(/\/xml\//, '/json/');
 
       $.getJSON(url)
@@ -65,11 +66,14 @@
     }
 
     function format_onclick() {
-      var $url = $('#url');
       var url = $url.val();
       url = url.replace(/([?&])/g, '\n$1');
       $url.val(url);
       adjustHeight($url);
+    }
+
+    function removeSpace_onclick() {
+      $url.val($url.val().replace(/\s+/g, ''));
     }
   </script>
 </head>
@@ -81,6 +85,7 @@
   <textarea id="url" rows="1"></textarea>
   <button onclick="search_onclick()">検索</button>
   <button onclick="format_onclick()">整形</button>
+  <button onclick="removeSpace_onclick()">空白削除</button>
 
   <div id="message"></div>
   <div id="result"></div>
