@@ -7,8 +7,14 @@
   <title>Visual Course - /search/course/extremeの結果を可視化するツール</title>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
-  <link class="css" rel="stylesheet" type="text/css" href="https://ekispertwebservice.github.io/GUI/sample/expCss/expGuiCourse.css">
-  <script type="text/javascript" src="https://ekispertwebservice.github.io/GUI/sample/expGuiCourse.js" charset="UTF-8"></script>
+  <link class="css" rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/EkispertWebService/GUI/master/expGuiCourse/expCss/expGuiCourse.css">
+  <script type="text/javascript" src="https://cdn.rawgit.com/EkispertWebService/GUI/master/expGuiCourse/expGuiCourse.js" charset="UTF-8"></script>
+
+  <style>
+    h1 { font-size: 14px; }
+    #url { width: 100%; }
+    #result { width: 700px; }
+  </style>
 
   <script>
     var resultApp;
@@ -19,6 +25,7 @@
 
     function search_onclick() {
       var url = $('#url').val();
+      url = url.replace(/\/xml\//, '/json/');
 
       $.getJSON(url)
       .catch(function(err) {
@@ -32,16 +39,21 @@
         console.error(err);
         alert('その他のエラー');
       });
-    });
+    }
   </script>
 </head>
 <body>
   <h1>Visual Course - /search/course/extremeの結果を可視化するツール</h1>
 
-  /search/course/extremeのフルURLを入れてください:<Br>
-  <input type="text" id="url" placeholder="https://api.ekispert.jp/v1/json/search/course/extreme?key=****************&viaList=22671:22828">
+  /search/course/extremeのフルURLを入れてください:<br>
+
+  <input type="text" id="url" placeholder="URL">
   <button onclick="search_onclick()">検索</button>
 
+  <ul>
+    <li>例: <code>https://api.ekispert.jp/v1/json/search/course/extreme?key=****************&viaList=22671:22828</code></li>
+    <li>xml版のURLでも可</li>
+  </ul>
 
   <div id="result"></div>
 </body>
