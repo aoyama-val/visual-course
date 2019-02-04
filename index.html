@@ -22,23 +22,34 @@
 
     $(function() {
       $url = $('#url');
+
       resultApp = new expGuiCourse(document.getElementById('result'));
   
       enableAutoHeight();
+
+      if (location.hash != '') {
+        var url = 'https://api.ekispert.jp/v1/json/search/course/extreme?' + location.hash.replace(/#/, '');
+        $url.val(url);
+        format_onclick();
+        search_onclick();
+      }
     });
 
+    // テキストエリアの高さ自動調整オン
     function enableAutoHeight() {
       $url.on('input', function(e) {
         adjustHeight($url);
       });
     }
 
+    // テキストエリアの高さを調整
     function adjustHeight($textarea) {
       var lineHeight = parseInt($textarea.css('lineHeight'));
       var lineCount = ($textarea.val() + '\n').match(/\n/g).length;
       $textarea.height(lineHeight * lineCount);
     }
 
+    // 検索ボタンがクリックされたとき呼ばれる
     function search_onclick() {
       var url = $url.val();
       url = url.replace(/\s+/g, '');
@@ -50,6 +61,7 @@
         try {
           $('#message').text('');
           resultApp.setResult(JSON.stringify(res));
+          location.hash = url.replace(/.*\?/, '');
         } catch (ex) {
           console.error(ex);
           alert('予期しないエラー');
@@ -65,6 +77,7 @@
       });
     }
 
+    // 整形ボタンがクリックされたとき呼ばれる
     function format_onclick() {
       var url = $url.val();
       url = url.replace(/([?&])/g, '\n$1');
@@ -72,6 +85,7 @@
       adjustHeight($url);
     }
 
+    // 空白削除ボタンがクリックされたとき呼ばれる
     function removeSpace_onclick() {
       $url.val($url.val().replace(/\s+/g, ''));
     }
@@ -96,6 +110,8 @@
     <li>URLの途中に改行やスペースを含んでいても可（削除されます）</li>
     <li><a href="http://docs.ekispert.com/v1/api/search/course/extreme.html" target="_blank">駅すぱあとWebサービスのドキュメント</a></li>
   </ul>
+
+  <a href="https://github.com/aoyama-val/visual-course" target="_blank">Repository</a>
 
 </body>
 </html>
