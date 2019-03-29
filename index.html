@@ -43,7 +43,7 @@
       enableAutoHeight();
 
       if (location.hash != '') {
-        var url = 'https://api.ekispert.jp/v1/json/search/course/extreme?' + location.hash.replace(/#/, '');
+        var url = location.hash.replace(/#/, '');
         $url.val(url);
         format_onclick();
         search_onclick();
@@ -75,7 +75,7 @@
       .then(function(res) {
         try {
           $('#message').text('');
-          location.hash = url.replace(/.*\?/, '');
+          location.hash = url;
           resultApp.setResult(JSON.stringify(res));
           displayResultTable(res);
         } catch (ex) {
