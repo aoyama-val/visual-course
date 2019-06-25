@@ -67,6 +67,13 @@
     // 検索ボタンがクリックされたとき呼ばれる
     function search_onclick() {
       var url = $url.val();
+
+      // URLの代わりにJSONレスポンスを貼り付けられた場合はそれを復元
+      if (url.indexOf('{"ResultSet"') >= 0) {
+        resultApp.setResult(url);
+        return;
+      }
+
       url = url.replace(/\s+/g, '');
       url = url.replace(/http:/, 'https:');
       url = url.replace(/\/xml\//, '/json/');
@@ -176,11 +183,12 @@
     <li>例: <code>https://api.ekispert.jp/v1/json/search/course/extreme?key=****************&viaList=22671:22828</code></li>
     <li>xml版のURLでも可</li>
     <li>URLの途中に改行やスペースを含んでいても可（削除されます）</li>
+    <li>JSONレスポンス（<code>{"ResultSet" ...</code>）を貼り付けても可</li>
     <li><a href="http://docs.ekispert.com/v1/api/search/course/extreme.html" target="_blank">駅すぱあとWebサービスのドキュメント</a></li>
   </ul>
 
   <a href="https://github.com/aoyama-val/visual-course" target="_blank">Repository</a><br>
-  <a href="http://ekispertwebservice.github.io/GUI/sample/sample_result_restore.html" target="_blank">レスポンスのJSONから経路を可視化したい場合はこちら</a><br>
+  <a href="http://ekispertwebservice.github.io/GUI/sample/sample_result_restore.html" target="_blank">レスポンスのJSONから経路を可視化するツールはこちら</a><br>
 
 </body>
 </html>
