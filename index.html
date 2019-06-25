@@ -13,6 +13,7 @@
 
   <style>
     h1 { font-size: 14px; }
+    #key { width: 200px; }
     #url { width: 100%; line-height: 20px; background: #f1f4f5; }
     #result { width: 700px; }
     #resultTable { border: 1px solid #666; border-collapse: collapse; width: 100%; }
@@ -29,6 +30,11 @@
     var app;
 
     $(function() {
+      var key = localStorage.getItem('key');
+      if (!(key == '' || key == null || key == undefined)) {
+        $('#key').val(key);
+      }
+
       $url = $('#url');
 
       resultApp = new expGuiCourse(document.getElementById('result'));
@@ -68,43 +74,64 @@
     function search_onclick() {
       var url = $url.val();
 
-      // URLの代わりにJSONレスポンスを貼り付けられた場合はそれを復元
-      if (url.indexOf('{"ResultSet"') >= 0) {
+      if (url == '') {
+        alert('アクセスキーを入力してください');
+        return;
+      } else if (url.indexOf('{"ResultSet"') >= 0) {
+        // URLの代わりにJSONレスポンスを貼り付けられた場合はそれを復元
         resultApp.setResult(url);
         return;
+      } else if (url.indexOf('http://') >= 0 || url.indexOf('https://') >= 0) {
+        // URLの場合
+        url = url.replace(/\s+/g, '');
+        url = url.replace(/http:/, 'https:');
+        url = url.replace(/\/xml\//, '/json/');
+        getResponse(url);
+      } else {
+        // シリアライズデータの場合
+        var key = localStorage.getItem('key');
+        if (key == '' || key == null || key == undefined) {
+          alert('経路シリアライズデータを復元するためにはアクセスキーの記憶が必要です');
+          return;
+        }
+        var serializeData = url;
+        var editUrl = 'https://api.ekispert.jp/v1/json/course/edit';
+        editUrl += '?key=' + key;
+        editUrl += '&serializeData=' + serializeData;
+        getResponse(editUrl);
       }
+    }
 
-      url = url.replace(/\s+/g, '');
-      url = url.replace(/http:/, 'https:');
-      url = url.replace(/\/xml\//, '/json/');
-
+    function getResponse(url) {
       $.getJSON(url)
-      .then(function(res) {
-        try {
-          $('#message').text('');
-          location.hash = url;
-          resultApp.setResult(JSON.stringify(res));
-          displayResultTable(res);
-        } catch (ex) {
-          console.error(ex);
-          alert('予期しないエラー');
-        }
-      })
-      .catch(function(err) {
-        console.error(err);
-        if (err.responseText) {
-          $('#message').text(err.responseText);
-        } else {
-          alert('getJSONエラー');
-        }
-      });
+        .then(function(res) {
+          try {
+            $('#message').text('');
+            location.hash = url;
+            resultApp.setResult(JSON.stringify(res));
+            displayResultTable(res);
+          } catch (ex) {
+            console.error(ex);
+            alert('予期しないエラー');
+          }
+        })
+        .catch(function(err) {
+          console.error(err);
+          if (err.responseText) {
+            $('#message').text(err.responseText);
+          } else {
+            alert('getJSONエラー');
+          }
+        });
     }
 
     // 整形ボタンがクリックされたとき呼ばれる
     function format_onclick() {
       var url = $url.val();
-      url = url.replace(/([?&])/g, '\n$1');
-      $url.val(url);
+      if (url.indexOf('http://') >= 0 || url.indexOf('https://') >= 0) {
+        url = url.replace(/([?&])/g, '\n$1');
+        $url.val(url);
+      }
       adjustHeight($url);
     }
 
@@ -152,18 +179,43 @@
         return (obj instanceof Array) ? obj : [obj];
       }
     }
+
+    function saveKey() {
+      var key = $('#key').val();
+      if (key == '') {
+        alert('アクセスキーを入力してください');
+        return;
+      }
+      localStorage.setItem('key', key);
+      alert('アクセスキーをブラウザに記憶しました');
+    }
   </script>
 </head>
 <body>
   <h1>Visual Course -  駅すぱあとWebサービスの経路探索結果を可視化するツール</h1>
 
-  /search/course/extremeのフルURLを入れてください:<br>
+  <input type="text" id="key" placeholder="アクセスキー">
+  <button onclick="saveKey()">アクセスキーをブラウザに記憶</button>（経路シリアライズデータを復元するためにはアクセスキーの記憶が必要です）
+  <br>
+  <br>
+
+  次のいずれかを貼り付けてください:<br>
+  <ul>
+    <li>/search/course/extremeのフルURL</li>
+    <ul>
+      <li>例: <code>https://api.ekispert.jp/v1/json/search/course/extreme?key=****************&viaList=22671:22828</code></li>
+      <li>xml版のURLでも可</li>
+      <li>URLの途中に改行やスペースを含んでいても可（削除されます）</li>
+    </ul>
+    <li>/search/course/extremeのJSONレスポンス</li>
+    <li>経路シリアライズデータ（アクセスキーの記憶が必要）</li>
+  </ul>
 
   <textarea id="url" rows="1"></textarea>
 
   <div>
     <button onclick="search_onclick()">検索</button>
-    <button onclick="format_onclick()">整形</button>
+    <button onclick="format_onclick()">URL整形</button>
     <button onclick="removeSpace_onclick()">空白削除</button>
   </div>
 
@@ -179,16 +231,9 @@
     </tr>
   </table>
 
-  <ul>
-    <li>例: <code>https://api.ekispert.jp/v1/json/search/course/extreme?key=****************&viaList=22671:22828</code></li>
-    <li>xml版のURLでも可</li>
-    <li>URLの途中に改行やスペースを含んでいても可（削除されます）</li>
-    <li>JSONレスポンス（<code>{"ResultSet" ...</code>）を貼り付けても可</li>
-    <li><a href="http://docs.ekispert.com/v1/api/search/course/extreme.html" target="_blank">駅すぱあとWebサービスのドキュメント</a></li>
-  </ul>
-
+  <br>
+  <a href="http://docs.ekispert.com/v1/api/search/course/extreme.html" target="_blank">駅すぱあとWebサービスのドキュメント</a><br>
   <a href="https://github.com/aoyama-val/visual-course" target="_blank">Repository</a><br>
-  <a href="http://ekispertwebservice.github.io/GUI/sample/sample_result_restore.html" target="_blank">レスポンスのJSONから経路を可視化するツールはこちら</a><br>
-
+  <a href="https://github.com/EkispertWebService/GUI" target="_blank">Powered by 駅すぱあとWebサービス GUI</a><br>
 </body>
 </html>
