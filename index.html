@@ -97,7 +97,7 @@
         var serializeData = url;
         var editUrl = 'https://api.ekispert.jp/v1/json/course/edit';
         editUrl += '?key=' + key;
-        editUrl += '&serializeData=' + serializeData;
+        editUrl += '&serializeData=' + encodeURIComponent(serializeData);
         getResponse(editUrl);
       }
     }
